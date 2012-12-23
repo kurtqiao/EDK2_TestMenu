@@ -1,0 +1,34 @@
+## 
+#  Sample UEFI Application Reference EDKII Module
+#
+#  A sample shell application that show menu program base on TestBOXDraw
+#
+#  Copyright (c) 2012 - 2013, KurtQiao. All rights reserved.<BR>
+#
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010006
+  BASE_NAME                      = TestMenu
+  FILE_GUID                      = 4FCE7826-E6BF-41c2-89B5-FB4A9E08BD31
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = UefiMain
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 IPF EBC
+#
+
+[Sources]
+  TestMenu.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+[LibraryClasses]
+  UefiApplicationEntryPoint
+  UefiLib
