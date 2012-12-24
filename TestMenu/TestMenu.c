@@ -16,7 +16,8 @@ Revision History
 #include <Uefi.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiApplicationEntryPoint.h>
-
+//add below include for gST, gBS
+#include "Library/UefiBootServicesTableLib.h"
 
 //#define MAX_LINE 32
 //#define MAX_CHAR 80
@@ -62,6 +63,10 @@ EFI_BOOT_SERVICES  *BS;
     CHAR16 *tailItemkeys[]      =     {L"ESC", L"PGDN/PGUP", L"F1"};
     CHAR16 *tailItems[]         =     {L"Exit", L"Next",L"AMenu"};
     CHAR16 *subMenu[]           =     {L"submenu1",L"about   "};
+
+BOOLEAN GO_PRINT_TEXT = FALSE;
+BOOLEAN GO_PRINT_MENU = FALSE;
+BOOLEAN GO_PRINT_HELP = FALSE;
 
 UINTN   mCols;
 UINTN   mRows;
@@ -132,21 +137,73 @@ DrawBOX(
     UINTN TextAttribute
 );
 EFI_STATUS
+Print_Menu();
+
+EFI_STATUS
 PrintSubMenu();
 
 EFI_STATUS
+Print_Help(
+    );
+
+EFI_STATUS
+ParseCommandLine (
+  IN UINTN Argc,
+  IN CHAR16 **Argv
+  );
+
+EFI_STATUS
 EFIAPI
-UefiMain (
-  IN EFI_HANDLE        ImageHandle,
-  IN EFI_SYSTEM_TABLE  *SystemTable
+//UefiMain (
+//  IN EFI_HANDLE        ImageHandle,
+//  IN EFI_SYSTEM_TABLE  *SystemTable
+//  )
+ShellAppMain (
+  IN UINTN Argc,
+  IN CHAR16 **Argv
   )
 {
+    EFI_STATUS  Status;
+
+    //ST = SystemTable;
+    //BS = SystemTable->BootServices;
+    ST = gST;
+    BS = gBS;
+    //    InitializeLib (ImageHandle, SystemTable);
+
+    Status = ParseCommandLine(Argc, Argv);
+
+    if (EFI_ERROR(Status))
+    {
+        Print(L"Wrong parameters usage!\n");
+        return Status;
+    }
+
+    if (GO_PRINT_HELP)
+    {
+        Print_Help();
+    }
+
+    if (GO_PRINT_MENU)
+        Print_Menu();
+
+    if (GO_PRINT_TEXT)
+    {
+        Print(L"Do text dump here!\n");
+    }
+
+
+    return EFI_SUCCESS;
+}
+
+EFI_STATUS
+Print_Menu()
+{
+
     UINTN                     index;
     EFI_INPUT_KEY             Key;
 
-    ST = SystemTable;
-    BS = SystemTable->BootServices;
-//    InitializeLib (ImageHandle, SystemTable);
+    
   ST->ConOut->QueryMode (
                 ST->ConOut,
                 ST->ConOut->Mode->Mode,
@@ -190,9 +247,8 @@ UefiMain (
 
     }
     
-    return EFI_SUCCESS;
-}
 
+}
 
 EFI_STATUS
 TestPrintAt (
@@ -485,6 +541,87 @@ DrawBOX(UINTN startx,UINTN starty,UINTN high,UINTN width, UINTN TextAttribute)
     Print(L"%c", BOXDRAW_UP_RIGHT); 
     for (i=startx+1;i<width;i++) Print(L"%c", BOXDRAW_HORIZONTAL); 
     Print(L"%c", BOXDRAW_UP_LEFT); 
+
+    return EFI_SUCCESS;
+}
+
+
+EFI_STATUS
+ParseCommandLine (
+  IN UINTN Argc,
+  IN CHAR16 **Argv
+  )
+/*++
+
+Routine Description:
+
+  Parse the command line.
+
+Returns:
+
+  EFI_SUCCESS   - Successfully.
+  OTHERS        - Something failed.
+
+--*/
+{
+  //EFI_STATUS  Status;
+  UINTN       Index;
+
+  if (Argc < 2)
+  {  
+    GO_PRINT_TEXT = TRUE;
+    GO_PRINT_MENU = FALSE;
+    GO_PRINT_HELP = FALSE;
+    return EFI_SUCCESS;
+  }
+  //
+  // Check all parameters
+  //
+  for (Index = 1; Index < Argc; Index ++) {
+    if ((Argv[Index][0] != L'-') || (Argv[Index][2] != L'\0')) {
+      return EFI_INVALID_PARAMETER;
+    }
+
+    switch (Argv[Index][1]) {
+    
+    case L'g':
+    case L'G':
+      //
+      // Run in menu mode
+      GO_PRINT_MENU = TRUE;
+      GO_PRINT_HELP = FALSE;
+      GO_PRINT_TEXT = FALSE;
+      break;
+
+    case L'h':
+    case L'H':
+    case L'?':
+      GO_PRINT_HELP = TRUE;
+      GO_PRINT_MENU = FALSE;
+      GO_PRINT_TEXT = FALSE;
+      return EFI_SUCCESS;
+
+    default:
+      return EFI_INVALID_PARAMETER;
+    }
+  }
+
+  //
+  // Done
+  //
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
+Print_Help(
+    )
+{
+    Print(L"Test Menu. Copyright@2012\n");
+    Print(L"Default print text message without parameters.\n");
+    Print(L"Usage:\n");
+    Print(L"TestMenu [-g][-G] [-h][-H]\n");
+    Print(L"-g/-G     Menu mode\n");
+    Print(L"-h/-H/-?  Print help\n");
 
     return EFI_SUCCESS;
 }

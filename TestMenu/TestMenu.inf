@@ -14,7 +14,7 @@
   FILE_GUID                      = 4FCE7826-E6BF-41c2-89B5-FB4A9E08BD31
   MODULE_TYPE                    = UEFI_APPLICATION
   VERSION_STRING                 = 1.0
-  ENTRY_POINT                    = UefiMain
+  ENTRY_POINT                    = ShellCEntryLib
 
 #
 # The following information is for reference only and not required by the build tools.
@@ -28,7 +28,9 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  ShellPkg/ShellPkg.dec
 
 [LibraryClasses]
   UefiApplicationEntryPoint
   UefiLib
+  ShellCEntryLib
